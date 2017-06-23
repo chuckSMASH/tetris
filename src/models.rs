@@ -20,7 +20,7 @@ struct States {
 }
 
 impl States {
-    pub fn init() -> States {
+    fn init() -> States {
         let tet_states: HashMap<TetriminoType, Vec<String>> = [
             (TetriminoType::O, states!("O")),
             (TetriminoType::I, states!("I")),
