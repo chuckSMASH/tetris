@@ -1,8 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{ HashMap, VecDeque };
+use std::iter::FromIterator;
 
-#[macro_use]
-use macros;
-
+use rand::{ thread_rng, Rng };
 
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
 pub enum TetriminoType {
@@ -38,15 +37,47 @@ impl States {
 
 pub struct Tetriminos {
     states: States,
+    queued: VecDeque<Tetrimino>,
 }
 
 impl Tetriminos {
     pub fn init() -> Tetriminos {
         Tetriminos {
             states: States::init(),
+            queued: VecDeque::new(),
         }
     }
     pub fn states(&self) -> &HashMap<TetriminoType, Vec<String>> {
         &self.states.states
     }
+    pub fn types(&self) -> Vec<TetriminoType> {
+        self.states.states.keys().map(|k| k.clone()).collect()
+    }
+}
+
+
+impl Iterator for Tetriminos {
+    type Item = Tetrimino;
+
+    fn next(&mut self) -> Option<Tetrimino> {
+        let next = self.queued.pop_front();
+        match next {
+            Some(tet) => Some(tet),
+            None => {
+                let mut rng = thread_rng();
+                let mut shapes = self.types();
+                rng.shuffle(&mut shapes);
+                self.queued = VecDeque::from_iter(
+                    shapes.into_iter()
+                        .map(|shape| Tetrimino { shape }));
+                self.queued.pop_front()
+            }
+        }
+    }
+}
+
+
+#[derive(Debug)]
+pub struct Tetrimino {
+    pub shape: TetriminoType,
 }
