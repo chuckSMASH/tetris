@@ -1,9 +1,10 @@
 use std::collections::{ HashMap, VecDeque };
-use std::iter::FromIterator;
+use std::iter::{ FromIterator, Iterator };
 
 use rand::{ thread_rng, Rng };
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum TetriminoType {
     O,
     I,
@@ -14,9 +15,44 @@ pub enum TetriminoType {
     L,
 }
 
+
+#[derive(Debug)]
+struct State {
+    strings: Vec<String>,
+    curr_idx: usize,
+}
+
+
+
+
+impl State {
+    fn new(states: Vec<String>) -> State {
+        State {
+            strings: states,
+            curr_idx: 0,
+        }
+    }
+}
+
+
+impl Iterator for State {
+    type Item = String;
+
+    fn next(&mut self) -> Option<String> {
+        let mut curr_idx = self.curr_idx;
+        if curr_idx >= self.strings.len() {
+            curr_idx = 0;
+        }
+        self.curr_idx = curr_idx + 1;
+        Some(self.strings.get(curr_idx).unwrap().clone())
+    }
+}
+
+
 struct States {
     states: HashMap<TetriminoType, Vec<String>>,
 }
+
 
 impl States {
     fn init() -> States {
@@ -39,6 +75,7 @@ pub struct Tetriminos {
     states: States,
     queued: VecDeque<Tetrimino>,
 }
+
 
 impl Tetriminos {
     pub fn init() -> Tetriminos {
@@ -69,7 +106,7 @@ impl Iterator for Tetriminos {
                 rng.shuffle(&mut shapes);
                 self.queued = VecDeque::from_iter(
                     shapes.into_iter()
-                        .map(|shape| Tetrimino { shape }));
+                        .map(|shape| Tetrimino::new(shape, &self)));
                 self.queued.pop_front()
             }
         }
@@ -79,5 +116,60 @@ impl Iterator for Tetriminos {
 
 #[derive(Debug)]
 pub struct Tetrimino {
-    pub shape: TetriminoType,
+    shape: TetriminoType,
+    states: State,
+    rotation: String,
+    x: usize,
+    y: usize,
+}
+
+
+impl Tetrimino {
+    pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
+               -> Tetrimino {
+        let mut rotations = State::new(tetriminos.states().get(&shape).unwrap().clone());
+        let rotation = rotations.next().unwrap();
+        Tetrimino {
+            shape,
+            rotation,
+            states: rotations,
+            x: 0,
+            y: 0,
+        }
+    }
+
+    pub fn rotate(&mut self) {
+        self.rotation = self.states.next().unwrap();
+    }
+
+    pub fn as_blocks(&mut self) -> Vec<Block> {
+        let x_offset = self.x;
+        let y_offset = self.y;
+        let mut blocks: Vec<Block> = vec![];
+        for (y, line) in self.rotation.lines().enumerate() {
+            for (x, digit) in line.chars().enumerate() {
+                if digit == '1' {
+                    blocks.push(Block {
+                        x: x + x_offset,
+                        y: y + y_offset,
+                    });
+                }
+            }
+        }
+        blocks
+    }
+}
+
+
+#[derive(Debug, PartialEq, Eq)]
+pub struct Block {
+    x: usize,
+    y: usize,
+}
+
+
+pub struct Grid {
+    height: usize,
+    width: usize,
+    blocks: Vec<Block>,
 }

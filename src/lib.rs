@@ -17,18 +17,14 @@ impl Game {
         let game = Game {
             tetriminos: Tetriminos::init(),
         };
-        println!("Possible states:");
-        for (tet_type, states) in game.tetriminos.states() {
-            for state in states {
-                println!("{:?}", tet_type);
-                println!("{}", state);
-            }
-            println!("{}", "=".repeat(10));
-        }
-        println!("20 randomly generated tetriminos:");
-        let twenty_tets = game.tetriminos.take(20);
-        for tet in twenty_tets {
-            println!("{:?}", tet);
-        }
+        let mut tet = game.tetriminos.take(1).next().unwrap();
+        println!("{:?}", tet);
+        println!("{:?}", tet.as_blocks());
+        tet.rotate();
+        println!("{:?}", tet.as_blocks());
+        tet.rotate();
+        println!("{:?}", tet.as_blocks());
+        tet.rotate();
+        println!("{:?}", tet.as_blocks());
     }
 }
