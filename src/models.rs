@@ -49,13 +49,13 @@ impl Iterator for State {
 }
 
 
-struct States {
+struct PossibleStates {
     states: HashMap<TetriminoType, Vec<String>>,
 }
 
 
-impl States {
-    fn init() -> States {
+impl PossibleStates {
+    fn init() -> PossibleStates {
         let tet_states: HashMap<TetriminoType, Vec<String>> = [
             (TetriminoType::O, states!("O")),
             (TetriminoType::I, states!("I")),
@@ -65,14 +65,14 @@ impl States {
             (TetriminoType::J, states!("J")),
             (TetriminoType::L, states!("L")),
         ].iter().cloned().collect();
-        States {
+        PossibleStates {
             states: tet_states,
         }
     }
 }
 
 pub struct Tetriminos {
-    states: States,
+    states: PossibleStates,
     queued: VecDeque<Tetrimino>,
 }
 
@@ -80,7 +80,7 @@ pub struct Tetriminos {
 impl Tetriminos {
     pub fn init() -> Tetriminos {
         Tetriminos {
-            states: States::init(),
+            states: PossibleStates::init(),
             queued: VecDeque::new(),
         }
     }
