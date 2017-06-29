@@ -32,6 +32,14 @@ impl State {
             curr_idx: 0,
         }
     }
+
+    fn peek(&mut self) -> Option<String> {
+        let mut curr_idx = self.curr_idx;
+        if curr_idx >= self.strings.len() {
+            curr_idx = 0;
+        }
+        Some(self.strings.get(curr_idx).unwrap().clone())
+    }
 }
 
 
