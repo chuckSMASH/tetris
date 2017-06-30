@@ -115,6 +115,25 @@ impl Tetriminos {
     pub fn types(&self) -> Vec<TetriminoType> {
         self.states.states.keys().map(|k| k.clone()).collect()
     }
+
+    fn maybe_refill_queue(&mut self) -> bool {
+        let mut was_empty = false;
+        if self.queued.is_empty() {
+            let mut rng = thread_rng();
+            let mut types = self.types();
+            rng.shuffle(&mut types);
+            self.queued = VecDeque::from_iter(
+                types.into_iter()
+                    .map(|tet_type| Tetrimino::new(tet_type, &self)));
+            was_empty = true;
+        }
+        was_empty
+    }
+
+    fn peek(&mut self) -> &Tetrimino {
+        self.maybe_refill_queue();
+        &self.queued[0]
+    }
 }
 
 
@@ -122,19 +141,8 @@ impl Iterator for Tetriminos {
     type Item = Tetrimino;
 
     fn next(&mut self) -> Option<Tetrimino> {
-        let next = self.queued.pop_front();
-        match next {
-            Some(tet) => Some(tet),
-            None => {
-                let mut rng = thread_rng();
-                let mut shapes = self.types();
-                rng.shuffle(&mut shapes);
-                self.queued = VecDeque::from_iter(
-                    shapes.into_iter()
-                        .map(|shape| Tetrimino::new(shape, &self)));
-                self.queued.pop_front()
-            }
-        }
+        self.maybe_refill_queue();
+        self.queued.pop_front()
     }
 }
 
