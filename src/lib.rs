@@ -18,7 +18,7 @@ impl Game {
             tetriminos: Tetriminos::init(),
         };
         let mut tet = game.tetriminos.take(1).next().unwrap();
-        println!("{:?}", tet);
+        println!("{:#?}", tet);
         println!("{:?}", tet.blocks());
         tet.rotate();
         println!("{:?}", tet.blocks());
