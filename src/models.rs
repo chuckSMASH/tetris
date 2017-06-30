@@ -17,17 +17,15 @@ pub enum TetriminoType {
 
 
 #[derive(Debug)]
-struct State {
+struct Rotation {
     internal: Vec<Vec<Vec<bool>>>,
     curr_idx: usize,
 }
 
 
-
-
-impl State {
-    fn new(states: Vec<Vec<Vec<bool>>>) -> State {
-        State {
+impl Rotation {
+    fn new(states: Vec<Vec<Vec<bool>>>) -> Rotation {
+        Rotation {
             internal: states,
             curr_idx: 0,
         }
@@ -57,16 +55,16 @@ impl State {
         blocks
     }
 
-    fn curr(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+    fn curr_as_blocks(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
         let idx = self.curr_idx;
-        State::as_blocks(self.internal.get(idx).unwrap(),
+        Rotation::as_blocks(self.internal.get(idx).unwrap(),
                          x_offset, y_offset)
     }
 
 
-    fn peek(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+    fn peek_as_blocks(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
         let next_idx = self.next_idx();
-        State::as_blocks(self.internal.get(next_idx).unwrap(),
+        Rotation::as_blocks(self.internal.get(next_idx).unwrap(),
                          x_offset, y_offset)
     }
 
@@ -76,13 +74,13 @@ impl State {
 }
 
 
-struct PossibleStates {
+struct States {
     states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>>,
 }
 
 
-impl PossibleStates {
-    fn init() -> PossibleStates {
+impl States {
+    fn init() -> States {
         let tet_states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>> = [
             (TetriminoType::O, states!("O")),
             (TetriminoType::I, states!("I")),
@@ -92,14 +90,14 @@ impl PossibleStates {
             (TetriminoType::J, states!("J")),
             (TetriminoType::L, states!("L")),
         ].iter().cloned().collect();
-        PossibleStates {
+        States {
             states: tet_states,
         }
     }
 }
 
 pub struct Tetriminos {
-    states: PossibleStates,
+    states: States,
     queued: VecDeque<Tetrimino>,
 }
 
@@ -107,7 +105,7 @@ pub struct Tetriminos {
 impl Tetriminos {
     pub fn init() -> Tetriminos {
         Tetriminos {
-            states: PossibleStates::init(),
+            states: States::init(),
             queued: VecDeque::new(),
         }
     }
@@ -144,7 +142,7 @@ impl Iterator for Tetriminos {
 #[derive(Debug)]
 pub struct Tetrimino {
     shape: TetriminoType,
-    rotations: State,
+    rotation: Rotation,
     x: usize,
     y: usize,
 }
@@ -153,27 +151,27 @@ pub struct Tetrimino {
 impl Tetrimino {
     pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
                -> Tetrimino {
-        let mut rotations = State::new(tetriminos.states().get(&shape).unwrap().clone());
+        let mut rotation = Rotation::new(tetriminos.states().get(&shape).unwrap().clone());
         Tetrimino {
             shape,
-            rotations,
+            rotation,
             x: 0,
             y: 0,
         }
     }
 
     pub fn rotate(&mut self) {
-        self.rotations.change();
+        self.rotation.change();
     }
 
     pub fn peek(&mut self) {
-        println!("{:?}", self.rotations.peek_as_blocks(self.x, self.y));
+        println!("{:?}", self.rotation.peek_as_blocks(self.x, self.y));
     }
 
     pub fn blocks(&mut self) -> Vec<Block> {
         let x_offset = self.x;
         let y_offset = self.y;
-        self.rotations.curr_as_blocks(x_offset, y_offset)
+        self.rotation.curr_as_blocks(x_offset, y_offset)
     }
 }
 
