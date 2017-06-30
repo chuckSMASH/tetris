@@ -8,9 +8,22 @@ macro_rules! states {
             let mut f = File::open(filename).expect("missing states file");
             let mut contents = String::new();
             f.read_to_string(&mut contents).expect("cannot read states file");
-            let states: Vec<String> = contents.trim().split("====\n")
-                .map(|s| s.to_string())
-                .collect();
+            let shapes = contents.trim().split("====\n").map(|s| s.to_string());
+            let mut states: Vec<Vec<Vec<bool>>> = vec![];
+            for (shape_num, shape) in shapes.enumerate() {
+                states.push(vec![]);
+                for line in shape.lines() {
+                    let bools: Vec<bool> = line.chars()
+                        .map(|c| {
+                            match c.to_digit(10) {
+                                Some(0) => false,
+                                Some(1) => true,
+                                _ => panic!("bad states files"),
+                            }
+                        }).collect();
+                    states[shape_num].push(bools);
+                }
+            }
             states
         }
     }

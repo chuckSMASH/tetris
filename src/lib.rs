@@ -19,12 +19,13 @@ impl Game {
         };
         let mut tet = game.tetriminos.take(1).next().unwrap();
         println!("{:?}", tet);
-        println!("{:?}", tet.as_blocks());
+        println!("{:?}", tet.blocks());
         tet.rotate();
-        println!("{:?}", tet.as_blocks());
+        println!("{:?}", tet.blocks());
         tet.rotate();
-        println!("{:?}", tet.as_blocks());
+        println!("{:?}", tet.blocks());
         tet.rotate();
-        println!("{:?}", tet.as_blocks());
+        println!("{:?}", tet.blocks());
+        tet.peek();
     }
 }

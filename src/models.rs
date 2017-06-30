@@ -18,7 +18,7 @@ pub enum TetriminoType {
 
 #[derive(Debug)]
 struct State {
-    strings: Vec<String>,
+    internal: Vec<Vec<Vec<bool>>>,
     curr_idx: usize,
 }
 
@@ -26,45 +26,64 @@ struct State {
 
 
 impl State {
-    fn new(states: Vec<String>) -> State {
+    fn new(states: Vec<Vec<Vec<bool>>>) -> State {
         State {
-            strings: states,
+            internal: states,
             curr_idx: 0,
         }
     }
 
-    fn peek(&mut self) -> Option<String> {
-        let mut curr_idx = self.curr_idx;
-        if curr_idx >= self.strings.len() {
-            curr_idx = 0;
+    fn next_idx(&self) -> usize {
+        let mut idx = self.curr_idx + 1;
+        if idx >= self.internal.len() {
+            idx = 0;
         }
-        Some(self.strings.get(curr_idx).unwrap().clone())
+        idx
     }
-}
 
-
-impl Iterator for State {
-    type Item = String;
-
-    fn next(&mut self) -> Option<String> {
-        let mut curr_idx = self.curr_idx;
-        if curr_idx >= self.strings.len() {
-            curr_idx = 0;
+    fn as_blocks(state: &Vec<Vec<bool>>, x_offset: usize, y_offset: usize)
+                 -> Vec<Block> {
+        let mut blocks: Vec<Block> = vec![];
+        for (y, row) in state.iter().enumerate() {
+            for (x, &cell_is_valued) in row.iter().enumerate() {
+                if cell_is_valued {
+                    blocks.push(Block {
+                        x: x + x_offset,
+                        y: y + y_offset,
+                    });
+                }
+            }
         }
-        self.curr_idx = curr_idx + 1;
-        Some(self.strings.get(curr_idx).unwrap().clone())
+        blocks
+    }
+
+    fn curr(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+        let idx = self.curr_idx;
+        State::as_blocks(self.internal.get(idx).unwrap(),
+                         x_offset, y_offset)
+    }
+
+
+    fn peek(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+        let next_idx = self.next_idx();
+        State::as_blocks(self.internal.get(next_idx).unwrap(),
+                         x_offset, y_offset)
+    }
+
+    fn change(&mut self) {
+        self.curr_idx = self.next_idx();
     }
 }
 
 
 struct PossibleStates {
-    states: HashMap<TetriminoType, Vec<String>>,
+    states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>>,
 }
 
 
 impl PossibleStates {
     fn init() -> PossibleStates {
-        let tet_states: HashMap<TetriminoType, Vec<String>> = [
+        let tet_states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>> = [
             (TetriminoType::O, states!("O")),
             (TetriminoType::I, states!("I")),
             (TetriminoType::T, states!("T")),
@@ -92,7 +111,7 @@ impl Tetriminos {
             queued: VecDeque::new(),
         }
     }
-    pub fn states(&self) -> &HashMap<TetriminoType, Vec<String>> {
+    pub fn states(&self) -> &HashMap<TetriminoType, Vec<Vec<Vec<bool>>>> {
         &self.states.states
     }
     pub fn types(&self) -> Vec<TetriminoType> {
@@ -125,8 +144,7 @@ impl Iterator for Tetriminos {
 #[derive(Debug)]
 pub struct Tetrimino {
     shape: TetriminoType,
-    states: State,
-    rotation: String,
+    rotations: State,
     x: usize,
     y: usize,
 }
@@ -136,35 +154,26 @@ impl Tetrimino {
     pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
                -> Tetrimino {
         let mut rotations = State::new(tetriminos.states().get(&shape).unwrap().clone());
-        let rotation = rotations.next().unwrap();
         Tetrimino {
             shape,
-            rotation,
-            states: rotations,
+            rotations,
             x: 0,
             y: 0,
         }
     }
 
     pub fn rotate(&mut self) {
-        self.rotation = self.states.next().unwrap();
+        self.rotations.change();
     }
 
-    pub fn as_blocks(&mut self) -> Vec<Block> {
+    pub fn peek(&mut self) {
+        println!("{:?}", self.rotations.peek_as_blocks(self.x, self.y));
+    }
+
+    pub fn blocks(&mut self) -> Vec<Block> {
         let x_offset = self.x;
         let y_offset = self.y;
-        let mut blocks: Vec<Block> = vec![];
-        for (y, line) in self.rotation.lines().enumerate() {
-            for (x, digit) in line.chars().enumerate() {
-                if digit == '1' {
-                    blocks.push(Block {
-                        x: x + x_offset,
-                        y: y + y_offset,
-                    });
-                }
-            }
-        }
-        blocks
+        self.rotations.curr_as_blocks(x_offset, y_offset)
     }
 }
 
