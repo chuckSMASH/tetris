@@ -159,7 +159,7 @@ pub struct Tetrimino {
 impl Tetrimino {
     pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
                -> Tetrimino {
-        let mut rotation = Rotation::new(tetriminos.states().get(&shape).unwrap().clone());
+        let rotation = Rotation::new(tetriminos.states().get(&shape).unwrap().clone());
         Tetrimino {
             shape,
             rotation,
@@ -168,8 +168,12 @@ impl Tetrimino {
         }
     }
 
-    pub fn rotate(&mut self) {
-        self.rotation.change();
+    pub fn rotate(&mut self, on_grid: &Grid) -> bool {
+        let next = self.rotation.peek_as_blocks(self.x, self.y);
+        match on_grid.is_legal(&next) {
+            true => { self.rotation.change(); true },
+            false => { false },
+        }
     }
 
     pub fn peek(&mut self) {
@@ -195,4 +199,25 @@ pub struct Grid {
     height: usize,
     width: usize,
     blocks: Vec<Block>,
+}
+
+impl Grid {
+    pub fn new(height: usize, width: usize) -> Grid {
+        let blocks: Vec<Block> = vec![];
+        Grid {
+            height,
+            width,
+            blocks,
+        }
+    }
+
+    fn is_legal(&self, blocks: &Vec<Block>) -> bool {
+        // note we don't need to check x or y < 0
+        // because usize type guarantees this
+        !blocks.iter().any(|ref block| {
+            self.blocks.contains(&block) ||
+            block.x >= self.width ||
+            block.y >= self.height
+        })
+    }
 }
