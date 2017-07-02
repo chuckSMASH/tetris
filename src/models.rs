@@ -236,6 +236,20 @@ impl Grid {
         }
     }
 
+    fn set_blocks(&mut self, blocks: Vec<Block>) {
+        self.blocks.extend(blocks.into_iter());
+    }
+
+    pub fn has_landed(&self, blocks: &Vec<Block>) -> bool {
+        blocks.iter().any(|ref block| {
+            block.y == 0 ||
+            self.blocks.contains(&Block {
+                x: block.x,
+                y: block.y - 1,
+            })
+        })
+    }
+
     fn is_legal(&self, blocks: &Vec<Block>) -> bool {
         // note we don't need to check x or y < 0
         // because usize type guarantees this
