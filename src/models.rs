@@ -4,6 +4,14 @@ use std::iter::{ FromIterator, Iterator };
 use rand::{ thread_rng, Rng };
 
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum Direction {
+    Left,
+    Right,
+    Down,
+}
+
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
 pub enum TetriminoType {
     O,
@@ -46,8 +54,8 @@ impl Rotation {
             for (x, &cell_is_valued) in row.iter().enumerate() {
                 if cell_is_valued {
                     blocks.push(Block {
-                        x: x + x_offset,
-                        y: y + y_offset,
+                        x: x_offset - x,
+                        y: y_offset - y,
                     });
                 }
             }
@@ -122,15 +130,16 @@ impl Tetriminos {
             let mut rng = thread_rng();
             let mut types = self.types();
             rng.shuffle(&mut types);
-            self.queued = VecDeque::from_iter(
-                types.into_iter()
-                    .map(|tet_type| Tetrimino::new(tet_type, &self)));
+            let next_gen: VecDeque<Tetrimino> = types.into_iter()
+                .map(|tet_type| Tetrimino::new(tet_type.clone(), &self))
+                .collect();
+            self.queued.extend(next_gen);
             was_empty = true;
         }
         was_empty
     }
 
-    fn peek(&mut self) -> &Tetrimino {
+    pub fn peek(&mut self) -> &Tetrimino {
         self.maybe_refill_queue();
         &self.queued[0]
     }
@@ -163,8 +172,20 @@ impl Tetrimino {
         Tetrimino {
             shape,
             rotation,
-            x: 0,
-            y: 0,
+            x: 5,
+            y: 20,
+        }
+    }
+
+    pub fn shift(&mut self, direction: Direction, on_grid: &Grid) -> bool {
+        match direction {
+            Direction::Down if self.y > 0 => { self.y -= 1; true },
+            Direction::Left if self.x > 0 => { self.x -= 1; true },
+            Direction::Right if self.x < on_grid.width - 1 => {
+                self.x += 1;
+                true
+            },
+            _ => { return false },
         }
     }
 
@@ -176,14 +197,18 @@ impl Tetrimino {
         }
     }
 
-    pub fn peek(&mut self) {
-        println!("{:?}", self.rotation.peek_as_blocks(self.x, self.y));
+    pub fn peek(&mut self) -> Vec<Block> {
+        self.rotation.peek_as_blocks(self.x, self.y)
     }
 
     pub fn blocks(&mut self) -> Vec<Block> {
         let x_offset = self.x;
         let y_offset = self.y;
         self.rotation.curr_as_blocks(x_offset, y_offset)
+    }
+
+    pub fn shape(&self) -> &TetriminoType {
+        &self.shape
     }
 }
 
