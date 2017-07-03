@@ -174,7 +174,7 @@ impl Tetrimino {
             shape,
             rotation,
             x: 5,
-            y: 20,
+            y: 21,
         }
     }
 
@@ -290,7 +290,9 @@ impl Grid {
         !blocks.iter().any(|ref block| {
             self.blocks.contains(&block) ||
             block.x >= self.width ||
-            block.y >= self.height
+            block.y > self.height ||
+            block.y < 1 ||
+            block.x < 1
         })
     }
 }

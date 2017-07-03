@@ -34,6 +34,9 @@ impl Game {
     fn on_press(&mut self, e: &Input) {
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
+                Key::Up => {
+                    self.active.rotate(&self.grid);
+                },
                 Key::Down => {
                     self.active.shift(Direction::Down, &self.grid);
                 },
