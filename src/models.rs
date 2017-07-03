@@ -195,22 +195,18 @@ impl Tetrimino {
         }
         match direction {
             Direction::Down if min_y > 1 => {
-                println!("Shifting down");
                 self.y -= 1;
                 true
             },
             Direction::Left if min_x > 0 => {
-                println!("Shifting left");
                 self.x -= 1;
                 true
             },
             Direction::Right if max_x < on_grid.width - 1 => {
-                println!("Shifting right");
                 self.x += 1;
                 true
             },
             _ => {
-                println!("Not shifting");
                 false
             },
         }
