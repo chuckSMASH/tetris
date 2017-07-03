@@ -1,4 +1,5 @@
 use std::collections::{ HashMap, VecDeque };
+use std::cmp::min;
 use std::iter::{ FromIterator, Iterator };
 
 use rand::{ thread_rng, Rng };
@@ -178,14 +179,40 @@ impl Tetrimino {
     }
 
     pub fn shift(&mut self, direction: Direction, on_grid: &Grid) -> bool {
+        let mut min_y = on_grid.height;
+        let mut min_x = on_grid.width;
+        let mut max_x = 0;
+        for block in &self.blocks() {
+            if block.y < min_y {
+                min_y = block.y;
+            }
+            if block.x < min_x {
+                min_x = block.x;
+            }
+            if block.x > max_x {
+                max_x = block.x;
+            }
+        }
         match direction {
-            Direction::Down if self.y > 0 => { self.y -= 1; true },
-            Direction::Left if self.x > 0 => { self.x -= 1; true },
-            Direction::Right if self.x < on_grid.width - 1 => {
+            Direction::Down if min_y > 1 => {
+                println!("Shifting down");
+                self.y -= 1;
+                true
+            },
+            Direction::Left if min_x > 0 => {
+                println!("Shifting left");
+                self.x -= 1;
+                true
+            },
+            Direction::Right if max_x < on_grid.width - 1 => {
+                println!("Shifting right");
                 self.x += 1;
                 true
             },
-            _ => { return false },
+            _ => {
+                println!("Not shifting");
+                false
+            },
         }
     }
 
@@ -213,16 +240,16 @@ impl Tetrimino {
 }
 
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Block {
-    x: usize,
-    y: usize,
+    pub x: usize,
+    pub y: usize,
 }
 
 
 pub struct Grid {
-    height: usize,
-    width: usize,
+    pub height: usize,
+    pub width: usize,
     blocks: Vec<Block>,
 }
 
@@ -236,7 +263,14 @@ impl Grid {
         }
     }
 
-    fn set_blocks(&mut self, blocks: Vec<Block>) {
+    pub fn blocks(&self) -> Vec<Block> {
+        let result: Vec<Block> = self.blocks.iter()
+            .map(|block| block.clone())
+            .collect();
+        result
+    }
+
+    pub fn set_blocks(&mut self, blocks: Vec<Block>) {
         self.blocks.extend(blocks.into_iter());
     }
 

@@ -1,39 +1,125 @@
+extern crate graphics;
+extern crate glutin_window;
+extern crate opengl_graphics;
+extern crate piston;
 extern crate rand;
 
 #[macro_use]
 mod macros;
 mod models;
 
-use models::{ Direction, Grid, Tetriminos };
+use graphics::{ clear, rectangle };
+use glutin_window::GlutinWindow as Window;
+use opengl_graphics::{ GlGraphics, OpenGL };
+use piston::event_loop::{ Events, EventLoop, EventSettings };
+use piston::input::{ Button, RenderEvent, PressEvent, Input };
+use piston::input::keyboard::Key;
+use piston::window::{ Window as PistonWindow, WindowSettings };
+
+use models::{ Direction, Grid, Tetrimino, Tetriminos };
 
 
 pub struct Game {
     grid: Grid,
     tetriminos: Tetriminos,
+    active: Tetrimino,
+    level: u8,
+    ticks: u8,
+
+    gl: GlGraphics,
 }
 
 
 impl Game {
+    fn on_press(&mut self, e: &Input) {
+        if let Some(Button::Keyboard(key)) = e.press_args() {
+            match key {
+                Key::Down => {
+                    self.active.shift(Direction::Down, &self.grid);
+                },
+                Key::Left => {
+                    self.active.shift(Direction::Left, &self.grid);
+                },
+                Key::Right => {
+                    self.active.shift(Direction::Right, &self.grid);
+                },
+                _ => {},
+            }
+        }
+    }
+
+    fn on_update(&mut self) {
+        // let ticks = self.ticks;
+        // if ticks > 0 {
+        //     self.ticks -= 1;
+        // } else {
+        //     self.active.shift(Direction::Down, &self.grid);
+        //     self.reset_ticks();
+        // }
+    }
+
+    fn on_render(&mut self, e: &Input) {
+        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+        const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        const CELL_SIZE: f64 = 40.0;
+
+        let args = e.render_args().unwrap();
+        let active_blocks = self.active.blocks();
+        let base_blocks = self.grid.blocks();
+        let blocks = active_blocks.iter().chain(base_blocks.iter());
+        let height = self.grid.height;
+
+        self.gl.draw(args.viewport(), |c, gl| {
+            clear(BLACK, gl);
+
+            rectangle(WHITE, [100.0, 100.0, 400.0, 800.0], c.transform, gl);
+            for block in blocks {
+                let x_cell = block.x as f64;
+                let y_cell = height as f64 - block.y as f64;
+                let x_pos = 100.0f64 + (x_cell * CELL_SIZE);
+                let y_pos = 100.0f64 + (y_cell * CELL_SIZE);
+                rectangle(BLACK, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
+            }
+        });
+    }
+
+    fn reset_ticks(&mut self) {
+        self.ticks = 53;
+    }
+
     pub fn run() {
+        let opengl = OpenGL::V3_2;
+        let mut window: Window = WindowSettings::new(
+            "tetris",
+            [1000, 1000])
+            .opengl(opengl)
+            .exit_on_esc(true)
+            .build()
+            .unwrap();
+        let mut tetriminos = Tetriminos::init();
+        let mut active = tetriminos.next().unwrap();
         let mut game = Game {
             grid: Grid::new(20, 10),
-            tetriminos: Tetriminos::init(),
+            tetriminos,
+            active,
+            level: 1,
+            ticks: 53,
+
+            gl: GlGraphics::new(opengl),
         };
-        let mut tet = game.tetriminos.next().unwrap();
+        let mut settings = EventSettings::new();
+        settings.set_ups(60);
+        settings.set_max_fps(60);
+        let mut events = Events::new(settings);
         println!("Initial state:");
-        println!("{:#?}", tet.blocks());
-        let rotated = tet.rotate(&game.grid);
-        println!("Rotated once ({}):", rotated);
-        println!("{:#?}", tet.blocks());
-        let shifted = tet.shift(Direction::Down, &game.grid);
-        println!("Shifted down once ({}):", shifted);
-        println!("{:#?}", tet.blocks());
-        let rotated = tet.rotate(&game.grid);
-        println!("Rotated once ({}):", rotated);
-        println!("{:#?}", tet.blocks());
-        let shift1 = tet.shift(Direction::Down, &game.grid);
-        let shift2 = tet.shift(Direction::Down, &game.grid);
-        println!("Shifted down twice ({}, {}):", shift1, shift2);
-        println!("{:#?}", tet.blocks());
+        println!("{:#?}", game.active.blocks());
+        while let Some(e) = events.next(&mut window) {
+            match e {
+                Input::Render(_) => game.on_render(&e),
+                Input::Press(_) => game.on_press(&e),
+                Input::Update(_) => game.on_update(),
+                _ => {},
+            }
+        }
     }
 }
