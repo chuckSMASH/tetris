@@ -48,15 +48,15 @@ impl Rotation {
         idx
     }
 
-    fn as_blocks(state: &Vec<Vec<bool>>, x_offset: usize, y_offset: usize)
+    fn as_blocks(state: &Vec<Vec<bool>>, x_offset: i32, y_offset: i32)
                  -> Vec<Block> {
         let mut blocks: Vec<Block> = vec![];
         for (y, row) in state.iter().enumerate() {
             for (x, &cell_is_valued) in row.iter().enumerate() {
                 if cell_is_valued {
                     blocks.push(Block {
-                        x: x_offset - x,
-                        y: y_offset - y,
+                        x: x_offset + x as i32,
+                        y: y_offset - y as i32,
                     });
                 }
             }
@@ -64,14 +64,14 @@ impl Rotation {
         blocks
     }
 
-    fn curr_as_blocks(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+    fn curr_as_blocks(&self, x_offset: i32, y_offset: i32) -> Vec<Block> {
         let idx = self.curr_idx;
         Rotation::as_blocks(self.internal.get(idx).unwrap(),
                          x_offset, y_offset)
     }
 
 
-    fn peek_as_blocks(&self, x_offset: usize, y_offset: usize) -> Vec<Block> {
+    fn peek_as_blocks(&self, x_offset: i32, y_offset: i32) -> Vec<Block> {
         let next_idx = self.next_idx();
         Rotation::as_blocks(self.internal.get(next_idx).unwrap(),
                          x_offset, y_offset)
@@ -161,8 +161,8 @@ impl Iterator for Tetriminos {
 pub struct Tetrimino {
     shape: TetriminoType,
     rotation: Rotation,
-    x: usize,
-    y: usize,
+    x: i32,
+    y: i32,
 }
 
 
@@ -238,19 +238,19 @@ impl Tetrimino {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Block {
-    pub x: usize,
-    pub y: usize,
+    pub x: i32,
+    pub y: i32,
 }
 
 
 pub struct Grid {
-    pub height: usize,
-    pub width: usize,
+    pub height: i32,
+    pub width: i32,
     blocks: Vec<Block>,
 }
 
 impl Grid {
-    pub fn new(height: usize, width: usize) -> Grid {
+    pub fn new(height: i32, width: i32) -> Grid {
         let blocks: Vec<Block> = vec![];
         Grid {
             height,
@@ -281,14 +281,12 @@ impl Grid {
     }
 
     fn is_legal(&self, blocks: &Vec<Block>) -> bool {
-        // note we don't need to check x or y < 0
-        // because usize type guarantees this
         !blocks.iter().any(|ref block| {
             self.blocks.contains(&block) ||
             block.x >= self.width ||
             block.y > self.height ||
             block.y < 1 ||
-            block.x < 1
+            block.x < 0
         })
     }
 }
