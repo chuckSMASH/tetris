@@ -52,13 +52,13 @@ impl Game {
     }
 
     fn on_update(&mut self) {
-        // let ticks = self.ticks;
-        // if ticks > 0 {
-        //     self.ticks -= 1;
-        // } else {
-        //     self.active.shift(Direction::Down, &self.grid);
-        //     self.reset_ticks();
-        // }
+        let ticks = self.ticks;
+        if ticks > 0 {
+            self.ticks -= 1;
+        } else {
+            self.active.shift(Direction::Down, &self.grid);
+            self.reset_ticks();
+        }
     }
 
     fn on_render(&mut self, e: &Input) {
