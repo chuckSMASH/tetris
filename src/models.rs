@@ -226,11 +226,30 @@ impl Tetrimino {
         }
     }
 
-    pub fn peek(&mut self) -> Vec<Block> {
-        self.rotation.peek_as_blocks(self.x, self.y)
+    pub fn peek(&self, movement: &Movement) -> Vec<Block> {
+        match movement {
+            &Movement::rotate => self.rotation.peek_as_blocks(self.x, self.y),
+            &Movement::shift(ref dir) => {
+                let blocks = self.blocks();
+                match dir {
+                    &Direction::Down => blocks.iter().map(|block| Block {
+                        x: block.x,
+                        y: block.y - 1,
+                    }).collect(),
+                    &Direction::Left => blocks.iter().map(|block| Block {
+                        x: block.x - 1,
+                        y: block.y,
+                    }).collect(),
+                    &Direction::Right => blocks.iter().map(|block| Block {
+                        x: block.x + 1,
+                        y: block.y,
+                    }).collect(),
+                }
+            }
+        }
     }
 
-    pub fn blocks(&mut self) -> Vec<Block> {
+    pub fn blocks(&self) -> Vec<Block> {
         let x_offset = self.x;
         let y_offset = self.y;
         self.rotation.curr_as_blocks(x_offset, y_offset)
@@ -272,21 +291,23 @@ impl Grid {
         result
     }
 
-    pub fn set_blocks(&mut self, blocks: Vec<Block>) {
-        self.blocks.extend(blocks.into_iter());
+    pub fn lock(&mut self, mut tetrimino: Tetrimino) {
+        let mut blocks = tetrimino.blocks();
+        self.blocks.extend(blocks);
     }
 
-    pub fn has_landed(&self, blocks: &Vec<Block>) -> bool {
-        blocks.iter().any(|ref block| {
-            block.y == 0 ||
-            self.blocks.contains(&Block {
-                x: block.x,
-                y: block.y - 1,
+    pub fn has_landed(&self, tetrimino: &Tetrimino) -> bool {
+        tetrimino.blocks().iter()
+            .any(|ref block| {
+                block.y == 1 ||
+                    self.blocks.contains(&Block {
+                        x: block.x,
+                        y: block.y - 1,
+                    })
             })
-        })
     }
 
-    fn is_legal(&self, blocks: &Vec<Block>) -> bool {
+    pub fn is_legal(&self, blocks: &Vec<Block>) -> bool {
         !blocks.iter().any(|ref block| {
             self.blocks.contains(&block) ||
             block.x >= self.width ||
