@@ -16,7 +16,7 @@ use piston::input::{ Button, RenderEvent, PressEvent, Input };
 use piston::input::keyboard::Key;
 use piston::window::{ Window as PistonWindow, WindowSettings };
 
-use models::{ Direction, Grid, Tetrimino, Tetriminos };
+use models::{ Direction, Grid, Movement, Tetrimino, Tetriminos };
 
 
 pub struct Game {
@@ -31,21 +31,30 @@ pub struct Game {
 
 
 impl Game {
+    fn on_move(&mut self, movement: Movement) {
+        let next = self.active.peek(&movement);
+        if !self.grid.is_legal(&next) {
+            return;
+        }
+        match movement {
+            Movement::rotate => self.active.rotate(&self.grid),
+            Movement::shift(direction) => self.active.shift(direction, &self.grid),
+        };
+        let has_landed = self.grid.has_landed(&self.active);
+        if has_landed {
+            let mut other = self.tetriminos.next().unwrap();
+            mem::swap(&mut self.active, &mut other);
+            self.grid.lock(other);
+        }
+    }
+
     fn on_press(&mut self, e: &Input) {
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
-                Key::Up => {
-                    self.active.rotate(&self.grid);
-                },
-                Key::Down => {
-                    self.active.shift(Direction::Down, &self.grid);
-                },
-                Key::Left => {
-                    self.active.shift(Direction::Left, &self.grid);
-                },
-                Key::Right => {
-                    self.active.shift(Direction::Right, &self.grid);
-                },
+                Key::Up => self.on_move(Movement::rotate),
+                Key::Down => self.on_move(Movement::shift(Direction::Down)),
+                Key::Left => self.on_move(Movement::shift(Direction::Left)),
+                Key::Right => self.on_move(Movement::shift(Direction::Right)),
                 _ => {},
             }
         }
@@ -56,7 +65,7 @@ impl Game {
         if ticks > 0 {
             self.ticks -= 1;
         } else {
-            self.active.shift(Direction::Down, &self.grid);
+            self.on_move(Movement::shift(Direction::Down));
             self.reset_ticks();
         }
     }
