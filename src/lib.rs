@@ -8,6 +8,8 @@ extern crate rand;
 mod macros;
 mod models;
 
+use std::mem;
+
 use graphics::{ clear, rectangle };
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL };
@@ -109,7 +111,7 @@ impl Game {
             .build()
             .unwrap();
         let mut tetriminos = Tetriminos::init();
-        let mut active = tetriminos.next().unwrap();
+        let active = tetriminos.next().unwrap();
         let mut game = Game {
             grid: Grid::new(20, 10),
             tetriminos,
@@ -123,8 +125,6 @@ impl Game {
         settings.set_ups(60);
         settings.set_max_fps(60);
         let mut events = Events::new(settings);
-        println!("Initial state:");
-        println!("{:#?}", game.active.blocks());
         while let Some(e) = events.next(&mut window) {
             match e {
                 Input::Render(_) => game.on_render(&e),
