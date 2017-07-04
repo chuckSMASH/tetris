@@ -5,6 +5,12 @@ use std::iter::{ FromIterator, Iterator };
 use rand::{ thread_rng, Rng };
 
 
+pub enum Movement {
+    rotate,
+    shift(Direction),
+}
+
+
 #[derive(Debug, Eq, PartialEq)]
 pub enum Direction {
     Left,
