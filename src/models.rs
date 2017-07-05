@@ -292,8 +292,38 @@ impl Grid {
     }
 
     pub fn lock(&mut self, mut tetrimino: Tetrimino) {
-        let mut blocks = tetrimino.blocks();
+        let blocks = tetrimino.blocks();
         self.blocks.extend(blocks);
+    }
+
+    fn decrement_rows_above(&mut self, row: i32) {
+        let mut blocks = self.blocks();
+        for block in &mut blocks {
+            if block.y > row {
+                block.y = block.y - 1;
+            }
+        }
+        self.blocks = blocks;
+    }
+
+    fn delete_row(&mut self, row: i32) {
+        let blocks: Vec<Block> = self.blocks().into_iter()
+            .filter(|block| block.y != row)
+            .collect();
+        self.blocks = blocks;
+    }
+
+    pub fn clear_full_rows(&mut self) {
+        let rows = (0..self.height+1).rev();
+        for row in rows {
+            let num_blocks = self.blocks.iter()
+                .filter(|&block| block.y == row)
+                .count();
+            if num_blocks as i32 == self.width {
+                self.delete_row(row);
+                self.decrement_rows_above(row);
+            }
+        }
     }
 
     pub fn has_landed(&self, tetrimino: &Tetrimino) -> bool {
