@@ -21,7 +21,7 @@ use opengl_graphics::{ GlGraphics, OpenGL };
 use piston::event_loop::{ Events, EventLoop, EventSettings };
 use piston::input::{ Button, RenderEvent, PressEvent, Input };
 use piston::input::keyboard::Key;
-use piston::window::{ Window as PistonWindow, WindowSettings };
+use piston::window::WindowSettings;
 
 use models::{ Direction, Grid, Movement, Tetrimino, Tetriminos };
 
@@ -55,8 +55,8 @@ impl Game {
                     return;
                 }
                 match movement {
-                    Movement::rotate => self.active.rotate(&self.grid),
-                    Movement::shift(direction) => self.active.shift(direction, &self.grid),
+                    Movement::Rotate => self.active.rotate(&self.grid),
+                    Movement::Shift(direction) => self.active.shift(direction, &self.grid),
                 };
                 let has_landed = self.grid.has_landed(&self.active);
                 if has_landed {
@@ -75,10 +75,10 @@ impl Game {
     fn on_press(&mut self, e: &Input) {
         if let Some(Button::Keyboard(key)) = e.press_args() {
             match key {
-                Key::Up => self.on_move(Movement::rotate),
-                Key::Down => self.on_move(Movement::shift(Direction::Down)),
-                Key::Left => self.on_move(Movement::shift(Direction::Left)),
-                Key::Right => self.on_move(Movement::shift(Direction::Right)),
+                Key::Up => self.on_move(Movement::Rotate),
+                Key::Down => self.on_move(Movement::Shift(Direction::Down)),
+                Key::Left => self.on_move(Movement::Shift(Direction::Left)),
+                Key::Right => self.on_move(Movement::Shift(Direction::Right)),
                 _ => {},
             }
         }
@@ -102,7 +102,7 @@ impl Game {
                 },
                 _ => {},
             }
-            self.on_move(Movement::shift(Direction::Down));
+            self.on_move(Movement::Shift(Direction::Down));
             self.reset_ticks();
         }
     }

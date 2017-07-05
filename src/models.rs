@@ -1,13 +1,12 @@
 use std::collections::{ HashMap, VecDeque };
-use std::cmp::min;
-use std::iter::{ FromIterator, Iterator };
+use std::iter::{ Iterator };
 
 use rand::{ thread_rng, Rng };
 
 
 pub enum Movement {
-    rotate,
-    shift(Direction),
+    Rotate,
+    Shift(Direction),
 }
 
 
@@ -228,8 +227,8 @@ impl Tetrimino {
 
     pub fn peek(&self, movement: &Movement) -> Vec<Block> {
         match movement {
-            &Movement::rotate => self.rotation.peek_as_blocks(self.x, self.y),
-            &Movement::shift(ref dir) => {
+            &Movement::Rotate => self.rotation.peek_as_blocks(self.x, self.y),
+            &Movement::Shift(ref dir) => {
                 let blocks = self.blocks();
                 match dir {
                     &Direction::Down => blocks.iter().map(|block| Block {
@@ -253,10 +252,6 @@ impl Tetrimino {
         let x_offset = self.x;
         let y_offset = self.y;
         self.rotation.curr_as_blocks(x_offset, y_offset)
-    }
-
-    pub fn shape(&self) -> &TetriminoType {
-        &self.shape
     }
 }
 
@@ -291,7 +286,7 @@ impl Grid {
         result
     }
 
-    pub fn lock(&mut self, mut tetrimino: Tetrimino) {
+    pub fn lock(&mut self, tetrimino: Tetrimino) {
         let blocks = tetrimino.blocks();
         self.blocks.extend(blocks);
     }
