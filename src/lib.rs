@@ -1,3 +1,8 @@
+// TODO: Index of bottom row with cells is 1-based. Gross, fix.
+// TODO: Maybe cut down on `Vec.clone()`s
+// TODO: Un-stub level/locking ticks
+// TODO: Get rid of any dead code
+// TODO: Use different ticks for gravity/locking/clearing
 extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
@@ -129,7 +134,7 @@ impl Game {
     }
 
     fn reset_ticks(&mut self) {
-        self.ticks = 53;
+        self.ticks = 23;
     }
 
     pub fn run() {
@@ -148,7 +153,7 @@ impl Game {
             tetriminos,
             active,
             level: 1,
-            ticks: 53,
+            ticks: 23,
             state: States::Falling,
 
             gl: GlGraphics::new(opengl),
