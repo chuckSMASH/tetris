@@ -43,19 +43,27 @@ pub struct Game {
 
 impl Game {
     fn on_move(&mut self, movement: Movement) {
-        let next = self.active.peek(&movement);
-        if !self.grid.is_legal(&next) {
-            return;
-        }
-        match movement {
-            Movement::rotate => self.active.rotate(&self.grid),
-            Movement::shift(direction) => self.active.shift(direction, &self.grid),
-        };
-        let has_landed = self.grid.has_landed(&self.active);
-        if has_landed {
-            let mut other = self.tetriminos.next().unwrap();
-            mem::swap(&mut self.active, &mut other);
-            self.grid.lock(other);
+        match self.state {
+            States::Falling | States::Locking => {
+                let next = self.active.peek(&movement);
+                if !self.grid.is_legal(&next) {
+                    return;
+                }
+                match movement {
+                    Movement::rotate => self.active.rotate(&self.grid),
+                    Movement::shift(direction) => self.active.shift(direction, &self.grid),
+                };
+                let has_landed = self.grid.has_landed(&self.active);
+                if has_landed {
+                    self.state = States::Locking;
+                } else {
+                    if self.state == States::Locking {
+                        self.reset_ticks();
+                    }
+                    self.state = States::Falling;
+                }
+            },
+            _ => {},
         }
     }
 
@@ -76,6 +84,19 @@ impl Game {
         if ticks > 0 {
             self.ticks -= 1;
         } else {
+            match self.state {
+                States::Locking => {
+                    let mut other = self.tetriminos.next().unwrap();
+                    mem::swap(&mut other, &mut self.active);
+                    self.grid.lock(other);
+                    self.state = States::Clearing;
+                },
+                States::Clearing => {
+                    self.grid.clear_full_rows();
+                    self.state = States::Falling;
+                },
+                _ => {},
+            }
             self.on_move(Movement::shift(Direction::Down));
             self.reset_ticks();
         }
