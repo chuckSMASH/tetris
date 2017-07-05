@@ -75,6 +75,7 @@ impl Game {
     fn on_render(&mut self, e: &Input) {
         const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
         const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        const GREEN: [f32; 4] = [0.2, 0.8, 0.2, 1.0];
         const CELL_SIZE: f64 = 40.0;
 
         let args = e.render_args().unwrap();
@@ -92,7 +93,7 @@ impl Game {
                 let y_cell = height as f64 - block.y as f64;
                 let x_pos = 100.0f64 + (x_cell * CELL_SIZE);
                 let y_pos = 100.0f64 + (y_cell * CELL_SIZE);
-                rectangle(BLACK, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
+                rectangle(GREEN, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
             }
         });
     }
