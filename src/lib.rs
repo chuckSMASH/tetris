@@ -21,10 +21,19 @@ use piston::window::{ Window as PistonWindow, WindowSettings };
 use models::{ Direction, Grid, Movement, Tetrimino, Tetriminos };
 
 
+#[derive(Eq, PartialEq)]
+pub enum States {
+    Falling,
+    Clearing,
+    Locking,
+}
+
+
 pub struct Game {
     grid: Grid,
     tetriminos: Tetriminos,
     active: Tetrimino,
+    state: States,
     level: u8,
     ticks: u8,
 
@@ -119,6 +128,7 @@ impl Game {
             active,
             level: 1,
             ticks: 53,
+            state: States::Falling,
 
             gl: GlGraphics::new(opengl),
         };
