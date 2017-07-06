@@ -256,10 +256,18 @@ impl Tetrimino {
 }
 
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct Block {
     pub x: i32,
     pub y: i32,
+
+}
+
+
+impl PartialEq for Block {
+    fn eq(&self, other: &Block) -> bool {
+        self.x == other.x && self.y == other.y
+    }
 }
 
 
