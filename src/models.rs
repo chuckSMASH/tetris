@@ -1,6 +1,7 @@
 use std::collections::{ HashMap, VecDeque };
 use std::iter::{ Iterator };
 
+use graphics::color::hex;
 use rand::{ thread_rng, Rng };
 
 
@@ -107,13 +108,13 @@ impl States {
             (TetriminoType::L, states!("L")),
         ].iter().cloned().collect();
         let tet_colors: HashMap<TetriminoType, [f32; 4]> = [
-            (TetriminoType::O, [0.9, 0.1, 0.1, 1.0]),
-            (TetriminoType::I, [0.1, 0.9, 0.1, 1.0]),
-            (TetriminoType::T, [0.1, 0.1, 0.9, 1.0]),
-            (TetriminoType::S, [0.5, 0.1, 0.5, 1.0]),
-            (TetriminoType::Z, [0.1, 0.5, 0.5, 1.0]),
-            (TetriminoType::J, [0.5, 0.5, 0.1, 1.0]),
-            (TetriminoType::L, [0.8, 0.8, 0.8, 1.0]),
+            (TetriminoType::O, hex("f0f000")),
+            (TetriminoType::I, hex("00f0f0")),
+            (TetriminoType::T, hex("a000f0")),
+            (TetriminoType::S, hex("00f000")),
+            (TetriminoType::Z, hex("f00000")),
+            (TetriminoType::J, hex("0000f0")),
+            (TetriminoType::L, hex("f0a000")),
         ].iter().cloned().collect();
         States {
             states: tet_states,
