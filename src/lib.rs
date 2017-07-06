@@ -109,8 +109,8 @@ impl Game {
     }
 
     fn on_render(&mut self, e: &Input) {
-        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-        const BLACK: [f32; 4] = [0.0, 0.0, 0.0, 1.0];
+        const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
+        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
         const CELL_SIZE: f64 = 40.0;
 
         let args = e.render_args().unwrap();
@@ -121,9 +121,9 @@ impl Game {
         let shade = &self.img;
 
         self.gl.draw(args.viewport(), |c, gl| {
-            clear(BLACK, gl);
+            clear(GRAY, gl);
 
-            rectangle(WHITE, [100.0, 100.0, 400.0, 800.0], c.transform, gl);
+            rectangle(BLACKISH, [100.0, 100.0, 400.0, 800.0], c.transform, gl);
             for block in blocks {
                 let x_cell = block.x as f64;
                 let y_cell = height as f64 - block.y as f64;
