@@ -53,7 +53,7 @@ impl Rotation {
         idx
     }
 
-    fn as_blocks(state: &Vec<Vec<bool>>, x_offset: i32, y_offset: i32)
+    fn as_blocks(state: &Vec<Vec<bool>>, x_offset: i32, y_offset: i32, color: [f32; 4])
                  -> Vec<Block> {
         let mut blocks: Vec<Block> = vec![];
         for (y, row) in state.iter().enumerate() {
@@ -62,6 +62,7 @@ impl Rotation {
                     blocks.push(Block {
                         x: x_offset + x as i32,
                         y: y_offset - y as i32,
+                        color,
                     });
                 }
             }
@@ -69,17 +70,17 @@ impl Rotation {
         blocks
     }
 
-    fn curr_as_blocks(&self, x_offset: i32, y_offset: i32) -> Vec<Block> {
+    fn curr_as_blocks(&self, x_offset: i32, y_offset: i32, color: [f32; 4]) -> Vec<Block> {
         let idx = self.curr_idx;
         Rotation::as_blocks(self.internal.get(idx).unwrap(),
-                         x_offset, y_offset)
+                         x_offset, y_offset, color)
     }
 
 
-    fn peek_as_blocks(&self, x_offset: i32, y_offset: i32) -> Vec<Block> {
+    fn peek_as_blocks(&self, x_offset: i32, y_offset: i32, color: [f32; 4]) -> Vec<Block> {
         let next_idx = self.next_idx();
         Rotation::as_blocks(self.internal.get(next_idx).unwrap(),
-                         x_offset, y_offset)
+                         x_offset, y_offset, color)
     }
 
     fn change(&mut self) {
@@ -90,6 +91,7 @@ impl Rotation {
 
 struct States {
     states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>>,
+    colors: HashMap<TetriminoType, [f32; 4]>,
 }
 
 
@@ -104,8 +106,18 @@ impl States {
             (TetriminoType::J, states!("J")),
             (TetriminoType::L, states!("L")),
         ].iter().cloned().collect();
+        let tet_colors: HashMap<TetriminoType, [f32; 4]> = [
+            (TetriminoType::O, [0.9, 0.1, 0.1, 1.0]),
+            (TetriminoType::I, [0.1, 0.9, 0.1, 1.0]),
+            (TetriminoType::T, [0.1, 0.1, 0.9, 1.0]),
+            (TetriminoType::S, [0.5, 0.1, 0.5, 1.0]),
+            (TetriminoType::Z, [0.1, 0.5, 0.5, 1.0]),
+            (TetriminoType::J, [0.5, 0.5, 0.1, 1.0]),
+            (TetriminoType::L, [0.8, 0.8, 0.8, 1.0]),
+        ].iter().cloned().collect();
         States {
             states: tet_states,
+            colors: tet_colors,
         }
     }
 }
@@ -168,6 +180,7 @@ pub struct Tetrimino {
     rotation: Rotation,
     x: i32,
     y: i32,
+    color: [f32; 4],
 }
 
 
@@ -175,9 +188,11 @@ impl Tetrimino {
     pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
                -> Tetrimino {
         let rotation = Rotation::new(tetriminos.states().get(&shape).unwrap().clone());
+        let color = tetriminos.states.colors.get(&shape).unwrap().clone();
         Tetrimino {
             shape,
             rotation,
+            color,
             x: 3,
             y: 21,
         }
@@ -218,7 +233,7 @@ impl Tetrimino {
     }
 
     pub fn rotate(&mut self, on_grid: &Grid) -> bool {
-        let next = self.rotation.peek_as_blocks(self.x, self.y);
+        let next = self.rotation.peek_as_blocks(self.x, self.y, self.color.clone());
         match on_grid.is_legal(&next) {
             true => { self.rotation.change(); true },
             false => { false },
@@ -227,21 +242,24 @@ impl Tetrimino {
 
     pub fn peek(&self, movement: &Movement) -> Vec<Block> {
         match movement {
-            &Movement::Rotate => self.rotation.peek_as_blocks(self.x, self.y),
+            &Movement::Rotate => self.rotation.peek_as_blocks(self.x, self.y, self.color.clone()),
             &Movement::Shift(ref dir) => {
                 let blocks = self.blocks();
                 match dir {
                     &Direction::Down => blocks.iter().map(|block| Block {
                         x: block.x,
                         y: block.y - 1,
+                        color: block.color.clone(),
                     }).collect(),
                     &Direction::Left => blocks.iter().map(|block| Block {
                         x: block.x - 1,
                         y: block.y,
+                        color: block.color.clone(),
                     }).collect(),
                     &Direction::Right => blocks.iter().map(|block| Block {
                         x: block.x + 1,
                         y: block.y,
+                        color: block.color.clone(),
                     }).collect(),
                 }
             }
@@ -251,7 +269,8 @@ impl Tetrimino {
     pub fn blocks(&self) -> Vec<Block> {
         let x_offset = self.x;
         let y_offset = self.y;
-        self.rotation.curr_as_blocks(x_offset, y_offset)
+        let color = self.color.clone();
+        self.rotation.curr_as_blocks(x_offset, y_offset, color)
     }
 }
 
@@ -260,7 +279,7 @@ impl Tetrimino {
 pub struct Block {
     pub x: i32,
     pub y: i32,
-
+    pub color: [f32; 4],
 }
 
 
@@ -336,6 +355,7 @@ impl Grid {
                     self.blocks.contains(&Block {
                         x: block.x,
                         y: block.y - 1,
+                        color: block.color.clone(),
                     })
             })
     }
