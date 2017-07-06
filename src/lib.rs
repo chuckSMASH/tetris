@@ -15,9 +15,9 @@ mod models;
 
 use std::mem;
 
-use graphics::{ clear, rectangle };
+use graphics::{ Transformed, image, clear, rectangle };
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ GlGraphics, OpenGL };
+use opengl_graphics::{ GlGraphics, OpenGL, Texture };
 use piston::event_loop::{ Events, EventLoop, EventSettings };
 use piston::input::{ Button, RenderEvent, PressEvent, Input };
 use piston::input::keyboard::Key;
@@ -43,6 +43,7 @@ pub struct Game {
     ticks: u8,
 
     gl: GlGraphics,
+    img: Texture,
 }
 
 
@@ -117,6 +118,7 @@ impl Game {
         let base_blocks = self.grid.blocks();
         let blocks = active_blocks.iter().chain(base_blocks.iter());
         let height = self.grid.height;
+        let shade = &self.img;
 
         self.gl.draw(args.viewport(), |c, gl| {
             clear(BLACK, gl);
@@ -129,6 +131,7 @@ impl Game {
                 let y_pos = 100.0f64 + (y_cell * CELL_SIZE);
                 let color = block.color.clone();
                 rectangle(color, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
+                image(shade, c.transform.trans(x_pos, y_pos), gl);
             }
         });
     }
@@ -157,6 +160,7 @@ impl Game {
             state: States::Falling,
 
             gl: GlGraphics::new(opengl),
+            img: Texture::from_path("assets/shade.png").unwrap(),
         };
         let mut settings = EventSettings::new();
         settings.set_ups(60);
