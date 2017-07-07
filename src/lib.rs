@@ -15,7 +15,7 @@ mod models;
 
 use std::mem;
 
-use graphics::{ Transformed, image, clear, rectangle };
+use graphics::{ Context, Transformed, image, clear, rectangle };
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL, Texture };
 use piston::event_loop::{ Events, EventLoop, EventSettings };
@@ -42,7 +42,6 @@ pub struct Game {
     level: u8,
     ticks: u8,
 
-    gl: GlGraphics,
     img: Texture,
 }
 
@@ -108,31 +107,39 @@ impl Game {
         }
     }
 
-    fn on_render(&mut self, e: &Input) {
-        const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
+    fn draw_well(&mut self, c: &Context, gl: &mut GlGraphics) {
         const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
         const CELL_SIZE: f64 = 40.0;
 
-        let args = e.render_args().unwrap();
         let active_blocks = self.active.blocks();
         let base_blocks = self.grid.blocks();
         let blocks = active_blocks.iter().chain(base_blocks.iter());
         let height = self.grid.height;
         let shade = &self.img;
 
-        self.gl.draw(args.viewport(), |c, gl| {
+        rectangle(BLACKISH, [0.0, 0.0, 400.0, 800.0], c.transform, gl);
+
+        for block in blocks {
+            let x_cell = block.x as f64;
+            let y_cell = height as f64 - block.y as f64;
+            let x_pos = 0.0f64 + (x_cell * CELL_SIZE);
+            let y_pos = 0.0f64 + (y_cell * CELL_SIZE);
+            let color = block.color.clone();
+
+            rectangle(color, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
+            image(shade, c.transform.trans(x_pos, y_pos), gl);
+        }
+    }
+
+    fn on_render(&mut self, e: &Input, gl: &mut GlGraphics) {
+        const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
+
+        let args = e.render_args().unwrap();
+
+        gl.draw(args.viewport(), |c, gl| {
             clear(GRAY, gl);
 
-            rectangle(BLACKISH, [100.0, 100.0, 400.0, 800.0], c.transform, gl);
-            for block in blocks {
-                let x_cell = block.x as f64;
-                let y_cell = height as f64 - block.y as f64;
-                let x_pos = 100.0f64 + (x_cell * CELL_SIZE);
-                let y_pos = 100.0f64 + (y_cell * CELL_SIZE);
-                let color = block.color.clone();
-                rectangle(color, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
-                image(shade, c.transform.trans(x_pos, y_pos), gl);
-            }
+            self.draw_well(&c, gl);
         });
     }
 
@@ -159,16 +166,16 @@ impl Game {
             ticks: 23,
             state: States::Falling,
 
-            gl: GlGraphics::new(opengl),
             img: Texture::from_path("assets/shade.png").unwrap(),
         };
+        let ref mut gl = GlGraphics::new(opengl);
         let mut settings = EventSettings::new();
         settings.set_ups(60);
         settings.set_max_fps(60);
         let mut events = Events::new(settings);
         while let Some(e) = events.next(&mut window) {
             match e {
-                Input::Render(_) => game.on_render(&e),
+                Input::Render(_) => game.on_render(&e, gl),
                 Input::Press(_) => game.on_press(&e),
                 Input::Update(_) => game.on_update(),
                 _ => {},
