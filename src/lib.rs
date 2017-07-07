@@ -38,6 +38,7 @@ pub struct Game {
     grid: Grid,
     tetriminos: Tetriminos,
     active: Tetrimino,
+    peeked: Tetrimino,
     state: States,
     level: u8,
     ticks: u8,
@@ -92,8 +93,10 @@ impl Game {
             match self.state {
                 States::Locking => {
                     let mut other = self.tetriminos.next().unwrap();
+                    let peeked = self.tetriminos.peek();
                     mem::swap(&mut other, &mut self.active);
                     self.grid.lock(other);
+                    self.peeked = peeked;
                     self.state = States::Clearing;
                 },
                 States::Clearing => {
@@ -131,6 +134,28 @@ impl Game {
         }
     }
 
+    fn draw_preview(&mut self, c: &Context, gl: &mut GlGraphics) {
+        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
+        const CELL_SIZE: f64 = 40.0;
+
+        let peeked_blocks = self.peeked.blocks();
+        let height = self.grid.height;
+        let shade = &self.img;
+
+        rectangle(BLACKISH, [500.0, 500.0, 200.0, 200.0], c.transform, gl);
+
+        for block in &peeked_blocks {
+            let x_cell= (block.x - 2) as f64;
+            let y_cell = 21.0 - block.y as f64;
+            let x_pos = 500.0f64 + (x_cell * CELL_SIZE);
+            let y_pos = 540.0f64 + (y_cell * CELL_SIZE);
+            let color = block.color.clone();
+
+            rectangle(color, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
+            image(shade, c.transform.trans(x_pos, y_pos), gl);
+        }
+    }
+
     fn on_render(&mut self, e: &Input, gl: &mut GlGraphics) {
         const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
 
@@ -140,6 +165,7 @@ impl Game {
             clear(GRAY, gl);
 
             self.draw_well(&c, gl);
+            self.draw_preview(&c, gl);
         });
     }
 
@@ -151,17 +177,19 @@ impl Game {
         let opengl = OpenGL::V3_2;
         let mut window: Window = WindowSettings::new(
             "tetris",
-            [1000, 1000])
+            [800, 800])
             .opengl(opengl)
             .exit_on_esc(true)
             .build()
             .unwrap();
         let mut tetriminos = Tetriminos::init();
         let active = tetriminos.next().unwrap();
+        let peeked = tetriminos.peek();
         let mut game = Game {
             grid: Grid::new(20, 10),
             tetriminos,
             active,
+            peeked,
             level: 1,
             ticks: 23,
             state: States::Falling,

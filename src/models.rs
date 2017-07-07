@@ -31,7 +31,7 @@ pub enum TetriminoType {
 }
 
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Rotation {
     internal: Vec<Vec<Vec<bool>>>,
     curr_idx: usize,
@@ -158,9 +158,9 @@ impl Tetriminos {
         was_empty
     }
 
-    pub fn peek(&mut self) -> &Tetrimino {
+    pub fn peek(&mut self) -> Tetrimino {
         self.maybe_refill_queue();
-        &self.queued[0]
+        self.queued[0].clone()
     }
 }
 
@@ -175,7 +175,7 @@ impl Iterator for Tetriminos {
 }
 
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Tetrimino {
     shape: TetriminoType,
     rotation: Rotation,
