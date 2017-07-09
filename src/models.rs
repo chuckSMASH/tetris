@@ -336,7 +336,8 @@ impl Grid {
         self.blocks = blocks;
     }
 
-    pub fn clear_full_rows(&mut self) {
+    pub fn clear_full_rows(&mut self) -> u32 {
+        let mut num_cleared = 0;
         let rows = (0..self.height+1).rev();
         for row in rows {
             let num_blocks = self.blocks.iter()
@@ -345,8 +346,10 @@ impl Grid {
             if num_blocks as i32 == self.width {
                 self.delete_row(row);
                 self.decrement_rows_above(row);
+                num_cleared += 1;
             }
         }
+        num_clears
     }
 
     pub fn has_landed(&self, tetrimino: &Tetrimino) -> bool {

@@ -42,6 +42,7 @@ pub struct Game {
     state: States,
     level: u8,
     ticks: u8,
+    lines: u32,
 
     img: Texture,
 }
@@ -100,7 +101,7 @@ impl Game {
                     self.state = States::Clearing;
                 },
                 States::Clearing => {
-                    self.grid.clear_full_rows();
+                    self.lines += self.grid.clear_full_rows();
                     self.state = States::Falling;
                 },
                 _ => {},
@@ -192,6 +193,7 @@ impl Game {
             peeked,
             level: 1,
             ticks: 23,
+            lines: 0,
             state: States::Falling,
 
             img: Texture::from_path("assets/shade.png").unwrap(),
