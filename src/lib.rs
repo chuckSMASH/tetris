@@ -115,9 +115,19 @@ impl Game {
         const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
         const CELL_SIZE: f64 = 40.0;
 
+        let full_rows = self.grid.get_full_rows();
         let active_blocks = self.active.blocks();
         let base_blocks = self.grid.blocks();
-        let blocks = active_blocks.iter().chain(base_blocks.iter());
+        let blocks = active_blocks.iter()
+            .chain(base_blocks.iter())
+            .filter(|&block| {
+                if self.state == States::Clearing {
+                    if self.ticks % 8 < 4 {
+                        return !full_rows.contains(&block.y);
+                    }
+                }
+                true
+            });
         let height = self.grid.height;
         let shade = &self.img;
 
@@ -140,7 +150,6 @@ impl Game {
         const CELL_SIZE: f64 = 40.0;
 
         let peeked_blocks = self.peeked.blocks();
-        let height = self.grid.height;
         let shade = &self.img;
 
         rectangle(BLACKISH, [500.0, 500.0, 200.0, 200.0], c.transform, gl);

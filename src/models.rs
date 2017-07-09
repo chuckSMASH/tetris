@@ -336,6 +336,18 @@ impl Grid {
         self.blocks = blocks;
     }
 
+    pub fn get_full_rows(&self) -> Vec<i32> {
+        let rows: Vec<i32> = (0..self.height+1).rev()
+            .filter(|&row| {
+                let num_blocks = self.blocks.iter()
+                    .filter(|&block| block.y == row)
+                    .count();
+                num_blocks as i32 == self.width
+            })
+            .collect();
+        rows
+    }
+
     pub fn clear_full_rows(&mut self) -> u32 {
         let mut num_cleared = 0;
         let rows = (0..self.height+1).rev();
@@ -349,7 +361,7 @@ impl Grid {
                 num_cleared += 1;
             }
         }
-        num_clears
+        num_cleared
     }
 
     pub fn has_landed(&self, tetrimino: &Tetrimino) -> bool {
