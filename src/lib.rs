@@ -41,7 +41,9 @@ pub struct Game {
     peeked: Tetrimino,
     state: States,
     level: u8,
-    ticks: u8,
+    fall_ticks: u8,
+    lock_ticks: u8,
+    clear_ticks: u8,
     lines: u32,
 
     img: Texture,
@@ -65,7 +67,7 @@ impl Game {
                     self.state = States::Locking;
                 } else {
                     if self.state == States::Locking {
-                        self.reset_ticks();
+                        self.reset_lock_ticks();
                     }
                     self.state = States::Falling;
                 }
@@ -87,27 +89,41 @@ impl Game {
     }
 
     fn on_update(&mut self) {
-        let ticks = self.ticks;
-        if ticks > 0 {
-            self.ticks -= 1;
-        } else {
-            match self.state {
-                States::Locking => {
+        match self.state {
+            States::Locking => {
+                let ticks = self.lock_ticks;
+                if ticks > 0 {
+                    self.lock_ticks -= 1;
+                } else {
                     let mut other = self.tetriminos.next().unwrap();
                     let peeked = self.tetriminos.peek();
                     mem::swap(&mut other, &mut self.active);
                     self.grid.lock(other);
                     self.peeked = peeked;
                     self.state = States::Clearing;
-                },
-                States::Clearing => {
+                    self.reset_lock_ticks();
+                    self.reset_fall_ticks();
+                }
+            },
+            States::Clearing => {
+                let ticks = self.clear_ticks;
+                if ticks > 0 {
+                    self.clear_ticks -= 1;
+                } else {
                     self.lines += self.grid.clear_full_rows();
-                    self.state = States::Falling;
-                },
-                _ => {},
-            }
-            self.on_move(Movement::Shift(Direction::Down));
-            self.reset_ticks();
+                    self.state =States::Falling;
+                    self.reset_clear_ticks();
+                }
+            },
+            States::Falling => {
+                let ticks = self.fall_ticks;
+                if ticks > 0 {
+                    self.fall_ticks -= 1;
+                } else {
+                    self.on_move(Movement::Shift(Direction::Down));
+                    self.reset_fall_ticks();
+                }
+            },
         }
     }
 
@@ -122,7 +138,7 @@ impl Game {
             .chain(base_blocks.iter())
             .filter(|&block| {
                 if self.state == States::Clearing {
-                    if self.ticks % 8 < 4 {
+                    if self.clear_ticks % 8 < 4 {
                         return !full_rows.contains(&block.y);
                     }
                 }
@@ -179,8 +195,16 @@ impl Game {
         });
     }
 
-    fn reset_ticks(&mut self) {
-        self.ticks = 23;
+    fn reset_fall_ticks(&mut self) {
+        self.fall_ticks = 23;
+    }
+
+    fn reset_lock_ticks(&mut self) {
+        self.lock_ticks = 23;
+    }
+
+    fn reset_clear_ticks(&mut self) {
+        self.clear_ticks = 15;
     }
 
     pub fn run() {
@@ -201,7 +225,9 @@ impl Game {
             active,
             peeked,
             level: 1,
-            ticks: 23,
+            fall_ticks: 23,
+            lock_ticks: 23,
+            clear_ticks: 23,
             lines: 0,
             state: States::Falling,
 
