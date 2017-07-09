@@ -8,6 +8,7 @@ authors = ["Chuck Bassett <iamchuckb@gmail.com>"]
 name = "tetris"
 
 [dependencies]
+clap = "2.25.0"
 piston = "0.32.0"
 piston2d-graphics = "0.21.1"
 piston2d-opengl_graphics = "0.43.0"

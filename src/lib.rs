@@ -240,7 +240,7 @@ impl Game {
         self.clear_ticks = 93;
     }
 
-    pub fn run() {
+    pub fn run(start_level: u8) {
         let opengl = OpenGL::V3_2;
         let mut window: Window = WindowSettings::new(
             "tetris",
@@ -257,10 +257,10 @@ impl Game {
             tetriminos,
             active,
             peeked,
-            level: 1,
-            fall_ticks: 23,
-            lock_ticks: 23,
-            clear_ticks: 23,
+            level: start_level,
+            fall_ticks: 53,
+            lock_ticks: 10,
+            clear_ticks: 93,
             lines: 0,
             state: States::Falling,
 
