@@ -108,7 +108,10 @@ impl Game {
             },
             States::Clearing => {
                 let ticks = self.clear_ticks;
-                if ticks > 0 {
+                let num_full_rows = self.grid.get_full_rows().len();
+                if num_full_rows == 0 {
+                    self.state = States::Falling;
+                } else if ticks > 0 {
                     self.clear_ticks -= 1;
                 } else {
                     self.lines += self.grid.clear_full_rows();
