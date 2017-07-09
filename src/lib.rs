@@ -13,6 +13,7 @@ extern crate rand;
 mod macros;
 mod models;
 
+use std::cmp::{max, min};
 use std::mem;
 
 use graphics::{ Context, Transformed, image, clear, rectangle };
@@ -111,7 +112,8 @@ impl Game {
                     self.clear_ticks -= 1;
                 } else {
                     self.lines += self.grid.clear_full_rows();
-                    self.state =States::Falling;
+                    self.state = States::Falling;
+                    self.update_level();
                     self.reset_clear_ticks();
                 }
             },
@@ -195,16 +197,44 @@ impl Game {
         });
     }
 
+    fn update_level(&mut self) {
+        let lines = self.lines;
+        self.level = max(self.level, min(lines / 10, 20) as u8);
+    }
+
     fn reset_fall_ticks(&mut self) {
-        self.fall_ticks = 23;
+        self.fall_ticks = match self.level {
+            0 => 53,
+            1 => 49,
+            2 => 45,
+            3 => 41,
+            4 => 37,
+            5 => 33,
+            6 => 28,
+            7 => 22,
+            8 => 17,
+            9 => 11,
+            10 => 10,
+            11 => 9,
+            12 => 8,
+            13 => 7,
+            14 => 6,
+            15 => 6,
+            16 => 5,
+            17 => 5,
+            18 => 4,
+            19 => 4,
+            20 => 3,
+            _ => panic!("illegal level"),
+        }
     }
 
     fn reset_lock_ticks(&mut self) {
-        self.lock_ticks = 23;
+        self.lock_ticks = 10;
     }
 
     fn reset_clear_ticks(&mut self) {
-        self.clear_ticks = 15;
+        self.clear_ticks = 93;
     }
 
     pub fn run() {
