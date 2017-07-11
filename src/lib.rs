@@ -31,6 +31,12 @@ use piston::window::WindowSettings;
 use models::{ Direction, Grid, Movement, Tetrimino, Tetriminos };
 
 
+const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
+const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
+
+const CELL_SIZE: f64 = 40.0;
+
 #[derive(Eq, PartialEq)]
 pub enum States {
     Falling,
@@ -141,9 +147,6 @@ impl Game {
     }
 
     fn draw_well(&mut self, c: &Context, gl: &mut GlGraphics) {
-        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
-        const CELL_SIZE: f64 = 40.0;
-
         let full_rows = self.grid.get_full_rows();
         let active_blocks = self.active.blocks();
         let base_blocks = self.grid.blocks();
@@ -160,12 +163,12 @@ impl Game {
         let height = self.grid.height;
         let shade = &self.img;
 
-        rectangle(BLACKISH, [0.0, 0.0, 400.0, 800.0], c.transform, gl);
+        rectangle(BLACKISH, [50.0, 0.0, 400.0, 800.0], c.transform, gl);
 
         for block in blocks {
             let x_cell = block.x as f64;
             let y_cell = height as f64 - block.y as f64;
-            let x_pos = 0.0f64 + (x_cell * CELL_SIZE);
+            let x_pos = 50.0f64 + (x_cell * CELL_SIZE);
             let y_pos = 0.0f64 + (y_cell * CELL_SIZE);
             let color = block.color.clone();
 
@@ -175,10 +178,6 @@ impl Game {
     }
 
     fn draw_preview(&mut self, c: &Context, gl: &mut GlGraphics) {
-        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
-        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-        const CELL_SIZE: f64 = 40.0;
-
         let peeked_blocks = self.peeked.blocks();
         let shade = &self.img;
 
@@ -187,14 +186,14 @@ impl Game {
                 color: WHITE,
                 radius: 3.0,
             });
-        preview_rect.draw([480.0, 500.0, 240.0, 200.0], &c.draw_state,
+        preview_rect.draw([500.0, 550.0, 240.0, 200.0], &c.draw_state,
                            c.transform, gl);
 
         for block in &peeked_blocks {
             let x_cell= (block.x - 2) as f64;
             let y_cell = 21.0 - block.y as f64;
             let x_pos = 500.0f64 + (x_cell * CELL_SIZE);
-            let y_pos = 540.0f64 + (y_cell * CELL_SIZE);
+            let y_pos = 590.0f64 + (y_cell * CELL_SIZE);
             let color = block.color.clone();
 
             rectangle(color, [x_pos, y_pos, CELL_SIZE, CELL_SIZE], c.transform, gl);
@@ -205,8 +204,6 @@ impl Game {
 
     fn draw_textbox(&mut self, label: &str, val: &str, x: f64, y: f64,
                     c: &Context, gl: &mut GlGraphics) {
-        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
-        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 
         let ref mut font = self.cache;
         let val_rect = Rectangle::new(BLACKISH).border(
@@ -246,24 +243,22 @@ impl Game {
 
     fn draw_score(&mut self, c: &Context, gl: &mut GlGraphics) {
         let score = format!("{:0>6}", self.score);
-        self.draw_textbox("SCORE", &score, 500.0, 50.0, c, gl);
+        self.draw_textbox("SCORE", &score, 520.0, 50.0, c, gl);
     }
 
 
     fn draw_lines(&mut self, c: &Context, gl: &mut GlGraphics) {
         let lines = format!("{:0>4}", self.lines);
-        self.draw_textbox("LINES", &lines, 500.0, 200.0, c, gl);
+        self.draw_textbox("LINES", &lines, 520.0, 200.0, c, gl);
     }
 
     fn draw_level(&mut self, c: &Context, gl: &mut GlGraphics) {
         let level = format!("{:0>2}", self.level);
-        self.draw_textbox("LEVEL", &level, 500.0, 350.0, c, gl);
+        self.draw_textbox("LEVEL", &level, 520.0, 350.0, c, gl);
     }
 
 
     fn on_render(&mut self, e: &Input, gl: &mut GlGraphics) {
-        const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
-
         let args = e.render_args().unwrap();
 
         gl.draw(args.viewport(), |c, gl| {
