@@ -1,8 +1,5 @@
 // TODO: Index of bottom row with cells is 1-based. Gross, fix.
 // TODO: Maybe cut down on `Vec.clone()`s
-// TODO: Un-stub level/locking ticks
-// TODO: Get rid of any dead code
-// TODO: Use different ticks for gravity/locking/clearing
 extern crate graphics;
 extern crate glutin_window;
 extern crate opengl_graphics;
