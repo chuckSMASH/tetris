@@ -15,10 +15,12 @@ mod models;
 
 use std::cmp::{max, min};
 use std::mem;
+use std::path::Path;
 
 use graphics::{ Context, Transformed, image, clear, rectangle };
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL, Texture };
+use opengl_graphics::glyph_cache::GlyphCache;
 use piston::event_loop::{ Events, EventLoop, EventSettings };
 use piston::input::{ Button, RenderEvent, PressEvent, Input };
 use piston::input::keyboard::Key;
@@ -49,6 +51,7 @@ pub struct Game {
     lines: u32,
 
     img: Texture,
+    cache: GlyphCache<'static>,
 }
 
 
@@ -256,6 +259,7 @@ impl Game {
 
     pub fn run(start_level: u8) {
         let opengl = OpenGL::V3_2;
+        let font_path = Path::new("assets/Verdana.ttf");
         let mut window: Window = WindowSettings::new(
             "tetris",
             [800, 800])
@@ -280,8 +284,10 @@ impl Game {
             state: States::Falling,
 
             img: Texture::from_path("assets/shade.png").unwrap(),
+            cache: GlyphCache::new(font_path).unwrap(),
         };
         let ref mut gl = GlGraphics::new(opengl);
+
         let mut settings = EventSettings::new();
         settings.set_ups(60);
         settings.set_max_fps(60);
