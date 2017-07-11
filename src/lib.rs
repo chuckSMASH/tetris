@@ -17,7 +17,8 @@ use std::cmp::{max, min};
 use std::mem;
 use std::path::Path;
 
-use graphics::{ Context, Transformed, image, clear, rectangle };
+use graphics::{ Context, Text, Transformed, image, clear, rectangle };
+use graphics::character::CharacterCache;
 use graphics::rectangle::{ Border, Rectangle };
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL, Texture };
@@ -201,6 +202,65 @@ impl Game {
         }
     }
 
+
+    fn draw_textbox(&mut self, label: &str, val: &str, x: f64, y: f64,
+                    c: &Context, gl: &mut GlGraphics) {
+        const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
+        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+
+        let ref mut font = self.cache;
+        let val_rect = Rectangle::new(BLACKISH).border(
+            Border {
+                color: WHITE,
+                radius: 3.0,
+            });
+        val_rect.draw([x, y, 200.0, 80.0], &c.draw_state,
+                      c.transform, gl);
+
+        let val_text = Text::new_color(WHITE, 40);
+        let val_width = font.width(40, &val);
+        let val_x_off = (200.0 - val_width) / 2.0;
+        let val_y_off = 60.0;
+        let text_trans = c.transform.trans(x + val_x_off, y + val_y_off);
+        val_text.draw(&val, font, &c.draw_state, text_trans, gl);
+
+        let label_x = x + 50.0;
+        let label_y = y - 15.0;
+        let label_rect = Rectangle::new(BLACKISH).border(
+            Border {
+                color: WHITE,
+                radius: 1.0,
+            });
+        label_rect.draw([label_x, label_y, 100.0, 30.0], &c.draw_state,
+                        c.transform, gl);
+
+        let label_text = Text::new_color(WHITE, 20);
+        let label_width = font.width(20, &label);
+        let label_x_off = (100.0 - label_width) / 2.0;
+        let label_y_off = 25.0;
+        let label_trans = c.transform.trans(label_x + label_x_off,
+                                            label_y + label_y_off);
+        label_text.draw(&label, font, &c.draw_state, label_trans, gl);
+    }
+
+
+    fn draw_score(&mut self, c: &Context, gl: &mut GlGraphics) {
+        let score = format!("{:0>6}", self.score);
+        self.draw_textbox("SCORE", &score, 500.0, 50.0, c, gl);
+    }
+
+
+    fn draw_lines(&mut self, c: &Context, gl: &mut GlGraphics) {
+        let lines = format!("{:0>4}", self.lines);
+        self.draw_textbox("LINES", &lines, 500.0, 200.0, c, gl);
+    }
+
+    fn draw_level(&mut self, c: &Context, gl: &mut GlGraphics) {
+        let level = format!("{:0>2}", self.level);
+        self.draw_textbox("LEVEL", &level, 500.0, 350.0, c, gl);
+    }
+
+
     fn on_render(&mut self, e: &Input, gl: &mut GlGraphics) {
         const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
 
@@ -211,6 +271,9 @@ impl Game {
 
             self.draw_well(&c, gl);
             self.draw_preview(&c, gl);
+            self.draw_score(&c, gl);
+            self.draw_lines(&c, gl);
+            self.draw_level(&c, gl);
         });
     }
 
