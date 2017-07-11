@@ -41,6 +41,7 @@ pub struct Game {
     active: Tetrimino,
     peeked: Tetrimino,
     state: States,
+    score: u32,
     level: u8,
     fall_ticks: u8,
     lock_ticks: u8,
@@ -114,7 +115,9 @@ impl Game {
                 } else if ticks > 0 {
                     self.clear_ticks -= 1;
                 } else {
-                    self.lines += self.grid.clear_full_rows();
+                    let cleared = self.grid.clear_full_rows();
+                    self.update_score(cleared);
+                    self.lines += cleared;
                     self.state = States::Falling;
                     self.update_level();
                     self.reset_clear_ticks();
@@ -205,6 +208,17 @@ impl Game {
         self.level = max(self.level, min(lines / 10, 20) as u8);
     }
 
+    fn update_score(&mut self, num_rows_cleared: u32) {
+        let l = (self.level + 1) as u32;
+        match num_rows_cleared {
+            1 => { self.score += 40u32 * l; },
+            2 => { self.score += 100u32 * l; },
+            3 => { self.score += 300u32 * l; },
+            4 => { self.score += 1200u32 * l; },
+            _ => {},
+        }
+    }
+
     fn reset_fall_ticks(&mut self) {
         self.fall_ticks = match self.level {
             0 => 53,
@@ -260,7 +274,8 @@ impl Game {
             level: start_level,
             fall_ticks: 53,
             lock_ticks: 10,
-            clear_ticks: 93,
+            clear_ticks: 48,
+            score: 0,
             lines: 0,
             state: States::Falling,
 
