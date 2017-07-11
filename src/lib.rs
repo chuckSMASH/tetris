@@ -18,6 +18,7 @@ use std::mem;
 use std::path::Path;
 
 use graphics::{ Context, Transformed, image, clear, rectangle };
+use graphics::rectangle::{ Border, Rectangle };
 use glutin_window::GlutinWindow as Window;
 use opengl_graphics::{ GlGraphics, OpenGL, Texture };
 use opengl_graphics::glyph_cache::GlyphCache;
@@ -174,12 +175,19 @@ impl Game {
 
     fn draw_preview(&mut self, c: &Context, gl: &mut GlGraphics) {
         const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
+        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
         const CELL_SIZE: f64 = 40.0;
 
         let peeked_blocks = self.peeked.blocks();
         let shade = &self.img;
 
-        rectangle(BLACKISH, [500.0, 500.0, 200.0, 200.0], c.transform, gl);
+        let preview_rect = Rectangle::new(BLACKISH).border(
+            Border {
+                color: WHITE,
+                radius: 3.0,
+            });
+        preview_rect.draw([480.0, 500.0, 240.0, 200.0], &c.draw_state,
+                           c.transform, gl);
 
         for block in &peeked_blocks {
             let x_cell= (block.x - 2) as f64;
