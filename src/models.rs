@@ -31,6 +31,22 @@ pub enum TetriminoType {
 }
 
 
+impl TetriminoType {
+
+    pub fn color(&self) -> [f32; 4] {
+        match self {
+            &TetriminoType::O => hex("f0f000"),
+            &TetriminoType::I => hex("00f0f0"),
+            &TetriminoType::T => hex("a000f0"),
+            &TetriminoType::S => hex("00f000"),
+            &TetriminoType::Z => hex("f00000"),
+            &TetriminoType::J => hex("0000f0"),
+            &TetriminoType::L => hex("f0a000"),
+        }
+    }
+}
+
+
 #[derive(Clone, Debug)]
 struct Rotation {
     internal: Vec<Vec<Vec<bool>>>,
@@ -92,7 +108,6 @@ impl Rotation {
 
 struct States {
     states: HashMap<TetriminoType, Vec<Vec<Vec<bool>>>>,
-    colors: HashMap<TetriminoType, [f32; 4]>,
 }
 
 
@@ -107,18 +122,8 @@ impl States {
             (TetriminoType::J, states!("J")),
             (TetriminoType::L, states!("L")),
         ].iter().cloned().collect();
-        let tet_colors: HashMap<TetriminoType, [f32; 4]> = [
-            (TetriminoType::O, hex("f0f000")),
-            (TetriminoType::I, hex("00f0f0")),
-            (TetriminoType::T, hex("a000f0")),
-            (TetriminoType::S, hex("00f000")),
-            (TetriminoType::Z, hex("f00000")),
-            (TetriminoType::J, hex("0000f0")),
-            (TetriminoType::L, hex("f0a000")),
-        ].iter().cloned().collect();
         States {
             states: tet_states,
-            colors: tet_colors,
         }
     }
 }
@@ -189,7 +194,7 @@ impl Tetrimino {
     pub fn new(shape: TetriminoType, tetriminos: &Tetriminos)
                -> Tetrimino {
         let rotation = Rotation::new(tetriminos.states().get(&shape).unwrap().clone());
-        let color = tetriminos.states.colors.get(&shape).unwrap().clone();
+        let color = shape.color();
         Tetrimino {
             shape,
             rotation,
