@@ -159,6 +159,8 @@ impl Game {
                 let ticks = self.fall_ticks;
                 if ticks > 0 {
                     self.fall_ticks -= 1;
+                } else if self.grid.has_landed(&self.active) {
+                    self.state = States::Locking;
                 } else {
                     self.on_move(Movement::Shift(Direction::Down));
                     self.reset_fall_ticks();
