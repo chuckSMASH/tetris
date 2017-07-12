@@ -41,6 +41,7 @@ pub enum States {
     Clearing,
     Locking,
     Paused(Box<States>),
+    GameOver,
 }
 
 
@@ -51,6 +52,7 @@ pub struct Game {
     peeked: Tetrimino,
     state: States,
     score: u32,
+    default_level: u8,
     level: u8,
     fall_ticks: u8,
     lock_ticks: u8,
@@ -107,6 +109,12 @@ impl Game {
                         _ => {},
                     }
                 },
+                States::GameOver => {
+                    match key {
+                        Key::Space => self.restart(),
+                        _ => {},
+                    }
+                }
                 _ => {
                     match key {
                         Key::P => self.pause(),
@@ -122,7 +130,12 @@ impl Game {
     }
 
     fn on_update(&mut self) {
+        if !self.grid.is_legal(&self.active.blocks()) {
+            self.state = States::GameOver;
+        }
+
         match self.state {
+            States::GameOver => {},
             States::Paused(_) => {},
             States::Locking => {
                 let ticks = self.lock_ticks;
@@ -280,6 +293,37 @@ impl Game {
         self.draw_textbox("LEVEL", &level, 520.0, 350.0, c, gl);
     }
 
+    fn draw_game_over(&mut self, c: &Context, gl: &mut GlGraphics) {
+        let ref mut font = self.cache;
+        let mut screen_size: [f64; 4] = [0.0, 0.0, 0.0, 0.0];
+        let rect = c.viewport.unwrap().rect;
+        for (idx, _) in rect.iter().enumerate() {
+            screen_size[idx] = rect[idx] as f64;
+        }
+        let center_x = (screen_size[2]) / 2.0;
+        let center_y = (screen_size[3]) / 2.0;
+        let overlay = Rectangle::new(CLEARISH);
+        overlay.draw(screen_size, &c.draw_state, c.transform, gl);
+
+        let game_over = "GAME OVER";
+        let game_over_text = Text::new_color([1.0, 1.0, 1.0, 0.8], 100);
+        let game_over_width = font.width(100, &game_over);
+        let game_over_x_pos = center_x - (game_over_width / 2.0);
+        let game_over_y_pos = center_y;
+        let game_over_trans = c.transform
+            .trans(game_over_x_pos, game_over_y_pos);
+        game_over_text.draw(&game_over, font, &c.draw_state, game_over_trans, gl);
+
+        let cont = "[spacebar to continue]";
+        let cont_text = Text::new_color([1.0, 1.0, 1.0, 0.8], 20);
+        let cont_width = font.width(20, &cont);
+        let cont_x_pos = center_x - (cont_width / 2.0);
+        let cont_y_pos = game_over_y_pos + 50.0;
+        let cont_trans = c.transform
+            .trans(cont_x_pos, cont_y_pos);
+        cont_text.draw(&cont, font, &c.draw_state, cont_trans, gl);
+    }
+
 
     fn draw_paused(&mut self, c: &Context, gl: &mut GlGraphics) {
         let ref mut font = self.cache;
@@ -316,8 +360,11 @@ impl Game {
             self.draw_lines(&c, gl);
             self.draw_level(&c, gl);
 
-            if let States::Paused(_) = self.state {
-                self.draw_paused(&c, gl);
+
+            match self.state {
+                States::Paused(_) => self.draw_paused(&c, gl),
+                States::GameOver => self.draw_game_over(&c, gl),
+                _ => {},
             }
         });
     }
@@ -336,6 +383,21 @@ impl Game {
             4 => { self.score += 1200u32 * l; },
             _ => {},
         }
+    }
+
+    fn restart(&mut self) {
+        let active = self.tetriminos.next().unwrap();
+        let peeked = self.tetriminos.peek();
+        self.active = active;
+        self.peeked = peeked;
+        self.grid = Grid::new(20, 10);
+        self.level = self.default_level;
+        self.fall_ticks = 53;
+        self.lock_ticks = 10;
+        self.clear_ticks = 48;
+        self.score = 0;
+        self.lines = 0;
+        self.state = States::Falling;
     }
 
     fn reset_fall_ticks(&mut self) {
@@ -391,6 +453,7 @@ impl Game {
             tetriminos,
             active,
             peeked,
+            default_level: start_level,
             level: start_level,
             fall_ticks: 53,
             lock_ticks: 10,
