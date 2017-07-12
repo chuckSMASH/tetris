@@ -31,14 +31,16 @@ use models::{ Direction, Grid, Movement, Tetrimino, Tetriminos };
 const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
 const GRAY: [f32; 4] = [0.4, 0.4, 0.4, 1.0];
 const BLACKISH: [f32; 4] = [0.05, 0.05, 0.05, 1.0];
+const CLEARISH: [f32; 4] = [0.05, 0.05, 0.05, 0.7];
 
 const CELL_SIZE: f64 = 40.0;
 
-#[derive(Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum States {
     Falling,
     Clearing,
     Locking,
+    Paused(Box<States>),
 }
 
 
@@ -61,6 +63,15 @@ pub struct Game {
 
 
 impl Game {
+    fn pause(&mut self) {
+        let curr_state = self.state.clone();
+        self.state = States::Paused(Box::new(curr_state));
+    }
+
+    fn resume(&mut self, prev_state: States) {
+        self.state = prev_state;
+    }
+
     fn on_move(&mut self, movement: Movement) {
         match self.state {
             States::Falling | States::Locking => {
@@ -88,18 +99,31 @@ impl Game {
 
     fn on_press(&mut self, e: &Input) {
         if let Some(Button::Keyboard(key)) = e.press_args() {
-            match key {
-                Key::Up => self.on_move(Movement::Rotate),
-                Key::Down => self.on_move(Movement::Shift(Direction::Down)),
-                Key::Left => self.on_move(Movement::Shift(Direction::Left)),
-                Key::Right => self.on_move(Movement::Shift(Direction::Right)),
-                _ => {},
+            let state = self.state.clone();
+            match state {
+                States::Paused(prev_state) => {
+                    match key {
+                        Key::P => self.resume(prev_state.as_ref().clone()),
+                        _ => {},
+                    }
+                },
+                _ => {
+                    match key {
+                        Key::P => self.pause(),
+                        Key::Up => self.on_move(Movement::Rotate),
+                        Key::Down => self.on_move(Movement::Shift(Direction::Down)),
+                        Key::Left => self.on_move(Movement::Shift(Direction::Left)),
+                        Key::Right => self.on_move(Movement::Shift(Direction::Right)),
+                        _ => {},
+                    }
+                },
             }
         }
     }
 
     fn on_update(&mut self) {
         match self.state {
+            States::Paused(_) => {},
             States::Locking => {
                 let ticks = self.lock_ticks;
                 if ticks > 0 {
@@ -255,6 +279,29 @@ impl Game {
     }
 
 
+    fn draw_paused(&mut self, c: &Context, gl: &mut GlGraphics) {
+        let ref mut font = self.cache;
+        let mut screen_size: [f64; 4] = [0.0, 0.0, 0.0, 0.0];
+        let rect = c.viewport.unwrap().rect;
+        for (idx, _) in rect.iter().enumerate() {
+            screen_size[idx] = rect[idx] as f64;
+        }
+        let center_x = (screen_size[2]) / 2.0;
+        let center_y = (screen_size[3]) / 2.0;
+        let overlay = Rectangle::new(CLEARISH);
+        overlay.draw(screen_size, &c.draw_state, c.transform, gl);
+        let letters = "PAUSED";
+        let text = Text::new_color([1.0, 1.0, 1.0, 0.8], 100);
+        let text_width = font.width(100, &letters);
+        let x_pos = center_x - (text_width / 2.0);
+        let y_pos = center_y + (100.0 / 2.0);
+        let text_trans = c.transform
+            .trans(x_pos, y_pos)
+            .rot_deg(-22.0);
+        text.draw(&letters, font, &c.draw_state, text_trans, gl);
+    }
+
+
     fn on_render(&mut self, e: &Input, gl: &mut GlGraphics) {
         let args = e.render_args().unwrap();
 
@@ -266,6 +313,10 @@ impl Game {
             self.draw_score(&c, gl);
             self.draw_lines(&c, gl);
             self.draw_level(&c, gl);
+
+            if let States::Paused(_) = self.state {
+                self.draw_paused(&c, gl);
+            }
         });
     }
 
